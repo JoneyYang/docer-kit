@@ -23,9 +23,7 @@
 
     <actions>
         <!-- Add your actions here -->
-        <action id="me.joney.plugin.coderkit.genemybatis.action.MyBatisMethodGenerate"
-          class="me.joney.plugin.coderkit.genemybatis.action.MyBatisMethodGenerate" text="Mybatis method generate"
-          description="Generate mybatis method.">
+        <action id="me.joney.plugin.coderkit.genemybatis.action.MyBatisMethodGenerate" class="me.joney.plugin.coderkit.genemybatis.action.MyBatisMethodGenerate" text="Mybatis method generate" description="Generate mybatis method.">
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="alt s" />
         </action>
