@@ -27,7 +27,7 @@ public class SetterMember {
 
     @Override
     public String toString() {
-        return field.getName();
+        return field.getName() +":"+field.getType().getPresentableText();
     }
 
     public PsiMethod getMethod() {

@@ -11,32 +11,44 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
-import javax.swing.JRadioButton;
 import javax.swing.JTextField;
+import me.joney.plugin.coderkit.genemybatis.bean.MapperResultMap;
+import me.joney.plugin.coderkit.genemybatis.bean.MapperXml;
 
 /**
- * Created by yang.qiang on 2018/10/31.
+ *
+ * @author yang.qiang
+ * @date 2018/10/31
  */
 public class MyBatisMethodGenerateUi extends JDialog {
 
-
+    private static final long serialVersionUID = -6688892856120994087L;
 
     private JPanel contentPanel;
-    private JComboBox comboBox1;
-    private JComboBox comboBox2;
-    private JTextField textField1;
-    private JComboBox<XmlFileImpl> mapperXmlSelectBox;
-    private JComboBox<XmlTag> resultMapSelectBox;
+    private JComboBox<MapperXml> mapperXmlSelectBox;
+    private JComboBox<MapperResultMap> resultMapSelectBox;
+    private JTextField methodNameField;
+    private JButton cancelButton;
+    private JButton oKButton;
+
+
 
     public MyBatisMethodGenerateUi(Set<XmlFileImpl> xmlFiles) {
+        // 设置触发事件
+        mapperXmlSelectBox.addActionListener(event -> onMapperXmlActivate());
+        resultMapSelectBox.addActionListener(event -> onResultMapActivate());
+        oKButton.addActionListener(event -> onOk());
+        cancelButton.addActionListener(event -> onCancel());
 
+        // 添加xml选择项
         for (XmlFileImpl xmlFile : xmlFiles) {
-            mapperXmlSelectBox.addItem(xmlFile);
+            mapperXmlSelectBox.addItem(new MapperXml(xmlFile));
+            mapperXmlSelectBox.setEnabled(true);
         }
-        mapperXmlSelectBox.addActionListener(event -> onSelectedXml());
-        resultMapSelectBox.addActionListener(e -> onSelectedResultMap());
 
-        mapperXmlSelectBox.setSelectedIndex(1);
+        if (!xmlFiles.isEmpty()) {
+            mapperXmlSelectBox.setSelectedIndex(0);
+        }
 
         setTitle("Generate MyBatis Method");
         setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
@@ -50,19 +62,38 @@ public class MyBatisMethodGenerateUi extends JDialog {
 
     }
 
-    private void onSelectedXml() {
-        XmlFileImpl selectedXml = (XmlFileImpl) mapperXmlSelectBox.getSelectedItem();
-        resultMapSelectBox.removeAllItems();
-
-        List<XmlTag> resultMapList = getResultMapList(selectedXml);
-        for (XmlTag xmlTag : resultMapList) {
-            resultMapSelectBox.addItem(xmlTag);
-        }
+    private void onCancel() {
     }
 
-    private void onSelectedResultMap() {
-        XmlTag selectedResultMap = (XmlTag) resultMapSelectBox.getSelectedItem();
-        System.out.println(selectedResultMap.getAttribute("type"));
+    private void onOk() {
+    }
+
+    private void onMapperXmlActivate() {
+        MapperXml selectedXml = (MapperXml) mapperXmlSelectBox.getSelectedItem();
+        if (selectedXml == null) {
+            return;
+        }
+
+        resultMapSelectBox.removeAllItems();
+
+        List<XmlTag> resultMapList = getResultMapList(selectedXml.getXmlFile());
+        for (XmlTag xmlTag : resultMapList) {
+            resultMapSelectBox.addItem(new MapperResultMap(xmlTag));
+            resultMapSelectBox.setEnabled(true);
+        }
+        if (!resultMapList.isEmpty()) {
+            resultMapSelectBox.setSelectedIndex(0);
+        }
+
+
+    }
+
+    private void onResultMapActivate() {
+        MapperResultMap selectedResultMap = (MapperResultMap) resultMapSelectBox.getSelectedItem();
+        if (selectedResultMap == null) {
+            return;
+        }
+        System.out.println(selectedResultMap);
     }
 
     private List<XmlTag> getResultMapList(XmlFileImpl xmlFile) {
