@@ -1,5 +1,6 @@
 package me.joney.plugin.coderkit.genemybatis.ui;
 
+import com.intellij.openapi.project.Project;
 import com.intellij.psi.impl.source.xml.XmlFileImpl;
 import com.intellij.psi.xml.XmlTag;
 import java.awt.Dimension;
@@ -8,12 +9,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JPanel;
+import javax.swing.JRadioButton;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import me.joney.plugin.coderkit.genemybatis.bean.MapperResultMap;
+import me.joney.plugin.coderkit.genemybatis.bean.MapperResult;
 import me.joney.plugin.coderkit.genemybatis.bean.MapperXml;
+import me.joney.plugin.coderkit.genemybatis.bean.MapperXmlTag;
 
 /**
  *
@@ -23,22 +28,35 @@ import me.joney.plugin.coderkit.genemybatis.bean.MapperXml;
 public class MyBatisMethodGenerateUi extends JDialog {
 
     private static final long serialVersionUID = -6688892856120994087L;
+    private Project project;
 
     private JPanel contentPanel;
     private JComboBox<MapperXml> mapperXmlSelectBox;
-    private JComboBox<MapperResultMap> resultMapSelectBox;
+    private JComboBox<MapperXmlTag> resultMapSelectBox;
     private JTextField methodNameField;
     private JButton cancelButton;
     private JButton oKButton;
+    private JRadioButton multipleRadioButton;
+    private JRadioButton singleRadioButton;
+    private JCheckBox limitOneCheckBox;
+    private JTextField returnTypeField;
+    private JTextField textField2;
+    private JButton chooserButton;
+    private JTextArea textArea1;
 
 
 
-    public MyBatisMethodGenerateUi(Set<XmlFileImpl> xmlFiles) {
+    public MyBatisMethodGenerateUi(Project project, Set<XmlFileImpl> xmlFiles) {
+        this.project = project;
+
         // 设置触发事件
         mapperXmlSelectBox.addActionListener(event -> onMapperXmlActivate());
         resultMapSelectBox.addActionListener(event -> onResultMapActivate());
         oKButton.addActionListener(event -> onOk());
         cancelButton.addActionListener(event -> onCancel());
+        singleRadioButton.addActionListener(event -> onSingleReturn());
+        multipleRadioButton.addActionListener(event -> onMultipleReturn());
+        chooserButton.addActionListener(event -> onChooser());
 
         // 添加xml选择项
         for (XmlFileImpl xmlFile : xmlFiles) {
@@ -62,6 +80,38 @@ public class MyBatisMethodGenerateUi extends JDialog {
 
     }
 
+    private void onChooser() {
+        MapperXmlTag selectedItem = (MapperXmlTag) resultMapSelectBox.getSelectedItem();
+        if (selectedItem == null) {
+            return;
+        }
+
+        ArrayList<MapperResult> mapperResults = new ArrayList<>();
+        XmlTag[] subTags = selectedItem.getXmlTag().getSubTags();
+        for (XmlTag subTag : subTags) {
+            if ("result".equals(subTag.getName())) {
+                mapperResults.add(new MapperResult(subTag.getAttributeValue("result"), subTag.getAttributeValue("property")));
+            } else if ("id".equals(subTag.getName())) {
+                mapperResults.add(new MapperResult(subTag.getAttributeValue("id"), subTag.getAttributeValue("property")));
+            }
+        }
+
+        WhereConditionChooser chooser = new WhereConditionChooser(project, mapperResults);
+        chooser.show();
+
+    }
+
+    private void onSingleReturn() {
+        multipleRadioButton.setSelected(false);
+        limitOneCheckBox.setEnabled(true);
+
+    }
+
+    private void onMultipleReturn() {
+        singleRadioButton.setSelected(false);
+        limitOneCheckBox.setEnabled(false);
+    }
+
     private void onCancel() {
     }
 
@@ -78,7 +128,7 @@ public class MyBatisMethodGenerateUi extends JDialog {
 
         List<XmlTag> resultMapList = getResultMapList(selectedXml.getXmlFile());
         for (XmlTag xmlTag : resultMapList) {
-            resultMapSelectBox.addItem(new MapperResultMap(xmlTag));
+            resultMapSelectBox.addItem(new MapperXmlTag(xmlTag));
             resultMapSelectBox.setEnabled(true);
         }
         if (!resultMapList.isEmpty()) {
@@ -89,11 +139,12 @@ public class MyBatisMethodGenerateUi extends JDialog {
     }
 
     private void onResultMapActivate() {
-        MapperResultMap selectedResultMap = (MapperResultMap) resultMapSelectBox.getSelectedItem();
+        MapperXmlTag selectedResultMap = (MapperXmlTag) resultMapSelectBox.getSelectedItem();
         if (selectedResultMap == null) {
             return;
         }
-        System.out.println(selectedResultMap);
+
+        returnTypeField.setText(selectedResultMap.getXmlTag().getAttributeValue("type"));
     }
 
     private List<XmlTag> getResultMapList(XmlFileImpl xmlFile) {

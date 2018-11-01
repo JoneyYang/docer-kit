@@ -6,11 +6,11 @@ import com.intellij.psi.xml.XmlTag;
  * @author yang.qiang
  * @date 2018/11/01
  */
-public class MapperResultMap {
+public class MapperXmlTag {
 
     private XmlTag xmlTag;
 
-    public MapperResultMap(XmlTag xmlTag) {
+    public MapperXmlTag(XmlTag xmlTag) {
         this.xmlTag = xmlTag;
     }
 
