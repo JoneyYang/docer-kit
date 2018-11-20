@@ -1,10 +1,14 @@
 ### 功能  
 1. 生成Bean setter调用代码
+2. 小幺鸡文档生成
+3. 复制拼接好的接口URL
+
 
 ### 敬请期待  
 1. MyBatis Mapper方法生成.
 2. 代码骨架生成.
 3. Bean类属性复制.  
+4. Feign复制
 
 ### 安装  
 1. Settings → Plugins → Install plugin from disk.
