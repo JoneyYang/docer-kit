@@ -4,7 +4,10 @@
     <vendor email="support@yourcompany.com" url="http://www.yourcompany.com">YourCompany</vendor>
 
     <description><![CDATA[
-    1. 生成setter调用代码.
+        Rest Kit
+    1. generate xiaoyaoji doc
+    2. copy mvc url
+    3. 生成setter调用代码.
     ]]></description>
 
     <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/plugin_compatibility.html
@@ -12,14 +15,30 @@
     <!-- uncomment to enable plugin in all products
     <depends>com.intellij.modules.lang</depends>
     -->
+    <idea-version since-build="153.*" until-build="300.*"/>
+
+    <version>1.2</version>
+
 
     <extensions defaultExtensionNs="com.intellij">
-        <!-- Add your extensions here -->
         <intentionAction>
             <className>me.joney.plugin.coderkit.genesetter.intention.GenerateSettersIntentionAction</className>
         </intentionAction>
 
+        <intentionAction>
+            <className>me.joney.plugin.coderkit.xiaoyaoji.intention.GenerateXiaoyaojiDocIntentionAction</className>
+        </intentionAction>
+
+        <intentionAction>
+            <className>me.joney.plugin.coderkit.xiaoyaoji.intention.CopyUrlIntentionAction</className>
+        </intentionAction>
+        me.joney.plugin.dockit
+        <!--xiaoyaoji config info store-->
+        <projectService serviceInterface="me.joney.plugin.coderkit.xiaoyaoji.store.XiaoyaojiConfigInfo"
+          serviceImplementation="me.joney.plugin.coderkit.xiaoyaoji.store.XiaoyaojiConfigInfo"/>
+
     </extensions>
+
 
     <actions>
         <!-- Add your actions here -->
@@ -27,5 +46,7 @@
             <add-to-group group-id="GenerateGroup" anchor="last"/>
             <keyboard-shortcut keymap="$default" first-keystroke="alt s" />
         </action>
+
+        <action id="DemoAction" class="me.joney.plugin.coderkit.demo.action.DemoAction" text="demo-action"/>
     </actions>
 </idea-plugin>
