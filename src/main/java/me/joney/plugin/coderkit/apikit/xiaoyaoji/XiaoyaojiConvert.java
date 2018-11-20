@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji;
+package me.joney.plugin.coderkit.apikit.xiaoyaoji;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -9,9 +9,9 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import me.joney.plugin.coderkit.util.RestPsiUtil;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestApiDoc;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestParam;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiDoc.ArgBean;
+import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
+import me.joney.plugin.coderkit.apikit.bean.RestParam;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDoc.ArgBean;
 
 /**
  * Created by yang.qiang on 2018/09/22.

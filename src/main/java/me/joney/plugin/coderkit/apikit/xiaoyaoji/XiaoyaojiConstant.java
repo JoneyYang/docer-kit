@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji;
+package me.joney.plugin.coderkit.apikit.xiaoyaoji;
 
 /**
  * Created by yang.qiang on 2018/09/22.

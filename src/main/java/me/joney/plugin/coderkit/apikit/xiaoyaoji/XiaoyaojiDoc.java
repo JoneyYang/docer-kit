@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji;
+package me.joney.plugin.coderkit.apikit.xiaoyaoji;
 
 import java.util.List;
 import lombok.Data;

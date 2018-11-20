@@ -1,9 +1,9 @@
 package me.joney.plugin.coderkit.util;
 
 import com.intellij.psi.PsiMethod;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestApiDoc;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestPsiClass;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestPsiMethod;
+import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
+import me.joney.plugin.coderkit.apikit.bean.RestPsiClass;
+import me.joney.plugin.coderkit.apikit.bean.RestPsiMethod;
 
 /**
  * Created by yang.qiang on 2018/09/29.

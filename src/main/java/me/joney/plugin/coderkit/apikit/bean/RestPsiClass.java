@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.bean;
+package me.joney.plugin.coderkit.apikit.bean;
 
 import com.intellij.psi.PsiAnnotation;
 import com.intellij.psi.PsiClass;

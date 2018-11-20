@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.ui;
+package me.joney.plugin.coderkit.apikit.ui;
 
 import com.intellij.openapi.module.Module;
 import com.intellij.openapi.project.Project;
@@ -11,13 +11,13 @@ import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestApiDoc;
-import me.joney.plugin.coderkit.xiaoyaoji.store.XiaoyaojiConfigInfo;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiClient;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiConvert;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiDoc;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiDocStruct;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiProject;
+import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
+import me.joney.plugin.coderkit.apikit.store.XiaoyaojiConfigInfo;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiClient;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiConvert;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDoc;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDocStruct;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiProject;
 import org.apache.commons.lang.StringUtils;
 import org.jetbrains.annotations.Nullable;
 

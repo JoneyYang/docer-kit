@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.intention;
+package me.joney.plugin.coderkit.apikit.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.editor.Editor;
@@ -14,7 +14,7 @@ import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import me.joney.plugin.coderkit.util.RestDocFactory;
 import me.joney.plugin.coderkit.util.RestPsiUtil;
-import me.joney.plugin.coderkit.xiaoyaoji.bean.RestApiDoc;
+import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
 import org.jetbrains.annotations.NotNull;

@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.bean;
+package me.joney.plugin.coderkit.apikit.bean;
 
 import java.util.List;
 import lombok.Data;
@@ -29,23 +29,23 @@ public class RestApiDoc {
     /**
      * 请求参数:请求头
      */
-    private List<RestParam> requestHeadParams;
+    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestHeadParams;
     /**
      * 请求参数:Query参数
      */
-    private List<RestParam> requestQueryParams;
+    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestQueryParams;
     /**
      * 请求参数:路径参数
      */
-    private List<RestParam> requestPathParam;
+    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestPathParam;
     /**
      * 请求参数:Body体参数
      */
-    private List<RestParam> requestBodyParams;
+    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestBodyParams;
     /**
      * 响应参数
      */
-    private List<RestParam> responseParams;
+    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> responseParams;
 
 
 }

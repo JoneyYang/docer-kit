@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.bean;
+package me.joney.plugin.coderkit.apikit.bean;
 
 import static com.intellij.psi.util.PsiUtil.resolveClassInClassTypeOnly;
 
@@ -32,7 +32,7 @@ public class RestPsiMethod {
     private PsiType returnType;
     private PsiAnnotation mappingAnnotation;
     private PsiDocComment docComment;
-    private RestPsiClass controllerClass;
+    private me.joney.plugin.coderkit.apikit.bean.RestPsiClass controllerClass;
     private PsiType responseBodyType;
     private Map<String, String> commentTagMap;
     private PsiMethod contentPsiMethod;
@@ -47,7 +47,7 @@ public class RestPsiMethod {
         this.responseBodyType = RestPsiUtil.extractResponseBodyType(contentPsiMethod);
         this.commentTagMap = RestPsiUtil.extractDocParamTagMap(docComment);
 
-        this.controllerClass = new RestPsiClass(contentPsiMethod.getContainingClass());
+        this.controllerClass = new me.joney.plugin.coderkit.apikit.bean.RestPsiClass(contentPsiMethod.getContainingClass());
     }
 
     public String getMappingValue() {
@@ -82,8 +82,8 @@ public class RestPsiMethod {
         return RestPsiUtil.getMappingMethod(mappingAnnotation);
     }
 
-    public List<RestParam> getResponseParamList() {
-        ArrayList<RestParam> paramsList = new ArrayList<>();
+    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getResponseParamList() {
+        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> paramsList = new ArrayList<>();
 
         PsiClass paramClass = PsiTypesUtil.getPsiClass(returnType);
         // 通过判断能否编辑, 判断是否为内部类
@@ -94,12 +94,12 @@ public class RestPsiMethod {
         return paramsList;
     }
 
-    public List<RestParam> getPathVariableParamList() {
-        ArrayList<RestParam> queryParams = new ArrayList<>();
+    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getPathVariableParamList() {
+        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
             JvmAnnotation pathVariableAnnotation = parameter.getAnnotation("org.springframework.web.bind.annotation.PathVariable");
             if (pathVariableAnnotation != null) {
-                RestParam param = new RestParam();
+                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -125,14 +125,14 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<RestParam> getHeadParamList() {
+    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getHeadParamList() {
 
-        ArrayList<RestParam> queryParams = new ArrayList<>();
+        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
 
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
             JvmAnnotation headParamAnnotation = parameter.getAnnotation("org.springframework.web.bind.annotation.RequestHeader");
             if (headParamAnnotation != null) {
-                RestParam param = new RestParam();
+                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -168,8 +168,8 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<RestParam> getQueryParamList() {
-        ArrayList<RestParam> queryParams = new ArrayList<>();
+    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getQueryParamList() {
+        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
 
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
 
@@ -179,7 +179,7 @@ public class RestPsiMethod {
 
             // RequestParam 字段
             if (requestParamAnnotation != null) {
-                RestParam param = new RestParam();
+                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -237,7 +237,7 @@ public class RestPsiMethod {
                         continue;
                     }
 
-                    RestParam param = new RestParam();
+                    me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
                     // 代码参数名称
                     String psiParamName = parameter.getName();
                     param.setName(psiParamName);
@@ -255,9 +255,9 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<RestParam> getBodyParamList() {
+    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getBodyParamList() {
 
-        ArrayList<RestParam> bodyParams = new ArrayList<>();
+        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> bodyParams = new ArrayList<>();
 
         JvmParameter[] parameters = contentPsiMethod.getParameters();
         for (JvmParameter parameter : parameters) {

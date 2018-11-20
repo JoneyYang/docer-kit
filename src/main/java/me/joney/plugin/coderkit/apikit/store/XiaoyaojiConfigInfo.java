@@ -1,4 +1,4 @@
-package me.joney.plugin.coderkit.xiaoyaoji.store;
+package me.joney.plugin.coderkit.apikit.store;
 
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ServiceManager;

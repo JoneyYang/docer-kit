@@ -1,11 +1,11 @@
-package me.joney.plugin.coderkit.xiaoyaoji.ui;
+package me.joney.plugin.coderkit.apikit.ui;
 
 import com.intellij.ide.util.ChooseElementsDialog;
 import com.intellij.openapi.project.Project;
 import java.awt.Component;
 import java.util.List;
 import javax.swing.Icon;
-import me.joney.plugin.coderkit.xiaoyaoji.xiaoyaoji.XiaoyaojiDocStruct;
+import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDocStruct;
 import org.jetbrains.annotations.Nullable;
 
 /**

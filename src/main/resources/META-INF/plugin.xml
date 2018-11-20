@@ -26,16 +26,16 @@
         </intentionAction>
 
         <intentionAction>
-            <className>me.joney.plugin.coderkit.xiaoyaoji.intention.GenerateXiaoyaojiDocIntentionAction</className>
+            <className>me.joney.plugin.coderkit.apikit.intention.GenerateXiaoyaojiDocIntentionAction</className>
         </intentionAction>
 
         <intentionAction>
-            <className>me.joney.plugin.coderkit.xiaoyaoji.intention.CopyUrlIntentionAction</className>
+            <className>me.joney.plugin.coderkit.apikit.intention.CopyUrlIntentionAction</className>
         </intentionAction>
         me.joney.plugin.dockit
         <!--xiaoyaoji config info store-->
-        <projectService serviceInterface="me.joney.plugin.coderkit.xiaoyaoji.store.XiaoyaojiConfigInfo"
-          serviceImplementation="me.joney.plugin.coderkit.xiaoyaoji.store.XiaoyaojiConfigInfo"/>
+        <projectService serviceInterface="me.joney.plugin.coderkit.apikit.store.XiaoyaojiConfigInfo"
+          serviceImplementation="me.joney.plugin.coderkit.apikit.store.XiaoyaojiConfigInfo"/>
 
     </extensions>
 
