@@ -38,7 +38,6 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
     private JComboBox<XiaoyaojiProject> projectComboBox;
     private JButton selectButton;
     private JTextField folderField;
-    private JButton button1;
     private XiaoyaojiClient xiaoyaojiClient;
     private XiaoyaojiDocStruct selectDocStruct;
 
@@ -173,9 +172,6 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
         urlPrefixMap.put(module.getName(), urlPrefixField.getText());
     }
 
-//    private void onCancel() {
-//        dispose();
-//    }
 
     private void onSelect() {
         Object selectItem = projectComboBox.getSelectedItem();
@@ -183,17 +179,14 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
         if (selectItem != null) {
             try {
                 XiaoyaojiProject selectedProject = (XiaoyaojiProject) selectItem;
-                List<XiaoyaojiDocStruct> docStructs = xiaoyaojiClient.docList(hostField.getText(), selectedProject.getId());
-                List<XiaoyaojiDocStruct> allFolder = XiaoyaojiDocStruct.getAllFolder(docStructs);
-                //    private JButton applyButton;
-                TreeChooserDialog folderChooserDialog = new TreeChooserDialog(project, allFolder, "Choose folder", "Choose a folder");
-                folderChooserDialog.show();
-                List<XiaoyaojiDocStruct> chosenElements = folderChooserDialog.getChosenElements();
-                if (!chosenElements.isEmpty()) {
-                    selectDocStruct = chosenElements.get(0);
-                    folderField.setText(selectDocStruct.getName());
+                List<XiaoyaojiDocStruct> docStruct = xiaoyaojiClient.docList(hostField.getText(), selectedProject.getId());
+                DocStructChooser chooser = new DocStructChooser(project, true, docStruct);
+                chooser.show();
+                XiaoyaojiDocStruct selected = chooser.getSelected();
+                if (selected != null) {
+                    folderField.setText(selected.getName());
                 }
-
+                selectDocStruct = selected;
             } catch (Exception e1) {
                 e1.printStackTrace();
             }

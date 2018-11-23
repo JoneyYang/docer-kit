@@ -163,12 +163,6 @@
               <title-color color="-4473925"/>
             </border>
             <children>
-              <component id="30fae" class="javax.swing.JButton" binding="button1" default-binding="true">
-                <constraints/>
-                <properties>
-                  <text value="Button"/>
-                </properties>
-              </component>
               <component id="cbfc6" class="javax.swing.JButton" binding="connectButton" default-binding="true">
                 <constraints/>
                 <properties>

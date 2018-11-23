@@ -2,13 +2,16 @@ package me.joney.plugin.coderkit.apikit.xiaoyaoji;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.event.TreeModelListener;
+import javax.swing.tree.TreeModel;
+import javax.swing.tree.TreePath;
 import lombok.Data;
 
 /**
  * Created by yang.qiang on 2018/10/07.
  */
 @Data
-public class XiaoyaojiDocStruct {
+public class XiaoyaojiDocStruct implements TreeModel  {
 
     private String content;
     private String createTime;
@@ -25,7 +28,7 @@ public class XiaoyaojiDocStruct {
     public static List<XiaoyaojiDocStruct> getAllFolder(List<XiaoyaojiDocStruct> structList) {
         ArrayList<XiaoyaojiDocStruct> allList = new ArrayList<>();
         for (XiaoyaojiDocStruct xiaoyaojiDocStruct : structList) {
-            if (isFolder(xiaoyaojiDocStruct)) {
+            if (xiaoyaojiDocStruct.isFolder()) {
                 allList.add(xiaoyaojiDocStruct);
                 if (xiaoyaojiDocStruct.getChildren() != null && !xiaoyaojiDocStruct.getChildren().isEmpty()) {
                     allList.addAll(getAllFolder(xiaoyaojiDocStruct.getChildren()));
@@ -35,16 +38,52 @@ public class XiaoyaojiDocStruct {
         return allList;
     }
 
-    public static boolean isFolder(XiaoyaojiDocStruct docStruct) {
-        return ("sys.doc.md".equals(docStruct.getType()) || "sys.folder".equals(docStruct.getType()));
+    public boolean isFolder() {
+        return ("sys.doc.md".equals(this.getType()) || "sys.folder".equals(this.getType()));
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 1; i < level; i++) {
-            sb.append("|-");
-        }
-        return sb.append(name).toString();
+        return name;
+    }
+
+    @Override
+    public Object getRoot() {
+        return this;
+    }
+
+    @Override
+    public Object getChild(Object parent, int index) {
+        return this.children;
+    }
+
+    @Override
+    public int getChildCount(Object parent) {
+        return children.size();
+    }
+
+    @Override
+    public boolean isLeaf(Object node) {
+        return children ==null || children.size() == 0;
+    }
+
+    @Override
+    public void valueForPathChanged(TreePath path, Object newValue) {
+
+    }
+
+    @Override
+    public int getIndexOfChild(Object parent, Object child) {
+        return 0;
+    }
+
+    @Override
+    public void addTreeModelListener(TreeModelListener l) {
+
+    }
+
+    @Override
+    public void removeTreeModelListener(TreeModelListener l) {
+
     }
 }

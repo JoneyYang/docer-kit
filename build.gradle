@@ -25,8 +25,8 @@ intellij {
 }
 patchPluginXml {
     changeNotes """
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>"""
+        添加小幺鸡文档生成功能
+      """
 }
 
 tasks.withType(JavaCompile) {
