@@ -6,6 +6,7 @@ import com.intellij.openapi.ui.DialogWrapper;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -26,7 +27,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
 
-    private RestApiDoc apiDoc;
+    private List<RestApiDoc> apiDocs;
     private Project project;
     private Module module;
     private JPanel contentPanel;
@@ -41,11 +42,11 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
     private XiaoyaojiClient xiaoyaojiClient;
     private XiaoyaojiDocStruct selectDocStruct;
 
-    public GenerateXiaoyaojiDocDialog(Project project, Module module, RestApiDoc doc) {
+    public GenerateXiaoyaojiDocDialog(Project project, Module module, List<RestApiDoc> doc) {
         super(project);
         this.project = project;
         this.module = module;
-        this.apiDoc = doc;
+        this.apiDocs = doc;
 
         XiaoyaojiConfigInfo xiaoyaojiConfigInfo = XiaoyaojiConfigInfo.getInstance(project);
 
@@ -132,20 +133,22 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
     private void onOK() {
         onApply();
 
-        XiaoyaojiDoc xiaoyaojiDoc = XiaoyaojiConvert.convertDoc(apiDoc);
-
+        List<XiaoyaojiDoc> docs = apiDocs.stream().map(XiaoyaojiConvert::convertDoc).collect(Collectors.toList());
         Object selectedItem = projectComboBox.getSelectedItem();
         XiaoyaojiProject xiaoyaojiProject = (XiaoyaojiProject) selectedItem;
 
-        new Thread(() -> {
-            try {
-                xiaoyaojiClient
-                    .createDoc(xiaoyaojiDoc, hostField.getText(), xiaoyaojiProject.getId(), selectDocStruct.getId(), urlPrefixField.getText());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+        for (XiaoyaojiDoc xiaoyaojiDoc : docs) {
+            new Thread(() -> {
+                try {
+                    xiaoyaojiClient
+                        .createDoc(xiaoyaojiDoc, hostField.getText(), xiaoyaojiProject.getId(), selectDocStruct.getId(), urlPrefixField.getText());
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
-        }).start();
+            }).start();
+
+        }
 
         dispose();
     }
@@ -208,10 +211,4 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
         super.doOKAction();
     }
 
-//    @Nullable
-//    @Override
-//    protected JComponent createCenterPanel() {
-//        contentPanel.add(cancelButton);
-//        return contentPanel;
-//    }
 }
