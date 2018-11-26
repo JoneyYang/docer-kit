@@ -30,6 +30,10 @@
         </intentionAction>
 
         <intentionAction>
+            <className>me.joney.plugin.coderkit.apikit.intention.PostmanIntentionAction</className>
+        </intentionAction>
+
+        <intentionAction>
             <className>me.joney.plugin.coderkit.apikit.intention.CopyUrlIntentionAction</className>
         </intentionAction>
         me.joney.plugin.dockit
