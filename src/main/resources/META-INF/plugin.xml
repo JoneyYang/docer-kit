@@ -17,7 +17,7 @@
     -->
     <idea-version since-build="153.*" until-build="300.*"/>
 
-    <version>1.2</version>
+    <version>1.3</version>
 
 
     <extensions defaultExtensionNs="com.intellij">
@@ -41,6 +41,8 @@
         <projectService serviceInterface="me.joney.plugin.coderkit.apikit.store.XiaoyaojiConfigInfo"
           serviceImplementation="me.joney.plugin.coderkit.apikit.store.XiaoyaojiConfigInfo"/>
 
+        <projectService serviceInterface="me.joney.plugin.coderkit.apikit.store.PostmanStore"
+          serviceImplementation="me.joney.plugin.coderkit.apikit.store.PostmanStore"/>
     </extensions>
 
 

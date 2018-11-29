@@ -2,6 +2,8 @@ package me.joney.plugin.coderkit.apikit.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.module.Module;
+import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
@@ -29,14 +31,14 @@ public class PostmanIntentionAction implements IntentionAction {
     @NotNull
     @Override
     public String getText() {
-        return "Generate postman file";
+        return "Export postman file";
     }
 
     @Nls(capitalization = Capitalization.Sentence)
     @NotNull
     @Override
     public String getFamilyName() {
-        return "Generate postman file";
+        return "Export postman file";
     }
 
     @Override
@@ -81,7 +83,8 @@ public class PostmanIntentionAction implements IntentionAction {
         }
 
         if (!docs.isEmpty()) {
-            GeneratePostmanDialog dialog = new GeneratePostmanDialog(project, docs);
+            Module module = ModuleUtil.findModuleForFile(file);
+            GeneratePostmanDialog dialog = new GeneratePostmanDialog(project, docs,module);
             dialog.show();
         } else {
             // TODO 提示消息
