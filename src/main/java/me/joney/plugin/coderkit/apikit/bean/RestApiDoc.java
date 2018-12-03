@@ -29,23 +29,23 @@ public class RestApiDoc {
     /**
      * 请求参数:请求头
      */
-    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestHeadParams;
+    private List<RestParam> requestHeadParams;
     /**
      * 请求参数:Query参数
      */
-    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestQueryParams;
+    private List<RestParam> requestQueryParams;
     /**
      * 请求参数:路径参数
      */
-    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestPathParam;
+    private List<RestParam> requestPathParam;
     /**
      * 请求参数:Body体参数
      */
-    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> requestBodyParams;
+    private List<RestParam> requestBodyParams;
     /**
      * 响应参数
      */
-    private List<me.joney.plugin.coderkit.apikit.bean.RestParam> responseParams;
+    private List<RestParam> responseParams;
 
 
 }

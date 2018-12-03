@@ -19,7 +19,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 import javax.swing.JButton;
 import javax.swing.JComponent;
@@ -294,7 +293,36 @@ public class GeneratePostmanDialog extends DialogWrapper {
 
             PostmanRequest request = new PostmanRequest();
             request.setMethod(doc.getMethod());
-            request.setDescription(doc.getDescription());
+
+            StringBuilder descBuilder = new StringBuilder();
+
+            descBuilder.append(doc.getDescription()).append("\n\n");
+
+            if (!doc.getRequestPathParam().isEmpty()) {
+                descBuilder.append("\n\n路径参数:");
+                doc.getRequestPathParam().forEach(param -> {
+                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
+                    descBuilder.append("\n");
+                });
+            }
+
+            if (!doc.getRequestBodyParams().isEmpty()) {
+                descBuilder.append("\n\n请求体参数:");
+                doc.getRequestBodyParams().forEach(param -> {
+                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
+                    descBuilder.append("\n");
+                });
+            }
+
+            if (!doc.getRequestBodyParams().isEmpty()) {
+                descBuilder.append("\n\n请求体参数:");
+                doc.getRequestBodyParams().forEach(param -> {
+                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
+                    descBuilder.append("\n");
+                });
+            }
+
+            request.setDescription(descBuilder.toString());
             item.setRequest(request);
 
             List<RequestParameter> heads = doc.getRequestHeadParams().stream().map(head -> {
@@ -322,13 +350,13 @@ public class GeneratePostmanDialog extends DialogWrapper {
             RequestBody body = new RequestBody();
             body.setMode("formdata");
             body.setRaw("");
-            List<RequestParameter> bodyList = doc.getRequestBodyParams().stream()
-                .map(restParam ->
-                    new RequestParameter().setDescription(restParam.getDescription()).setKey(restParam.getName()).setValue("")
-                )
-                .collect(Collectors.toList());
-
-            body.setFormdata(bodyList);
+//            List<RequestParameter> bodyList = doc.getRequestBodyParams().stream()
+//                .map(restParam ->
+//                    new RequestParameter().setDescription(restParam.getDescription()).setKey(restParam.getName()).setValue("")
+//                )
+//                .collect(Collectors.toList());
+//
+//            body.setFormdata(bodyList);
 
 
             request.setBody(body);

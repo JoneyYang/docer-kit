@@ -67,7 +67,11 @@ public class RestPsiMethod {
 
     public String getCommentContent() {
         ArrayList<String> commentLine = new ArrayList<>();
-        PsiElement[] descriptionElements = contentPsiMethod.getDocComment().getDescriptionElements();
+        PsiDocComment psiDocComment = contentPsiMethod.getDocComment();
+        if (psiDocComment == null) {
+            return "";
+        }
+        PsiElement[] descriptionElements = psiDocComment.getDescriptionElements();
         for (PsiElement descriptionElement : descriptionElements) {
             String text = descriptionElement.getText();
             if (StringUtils.isNotBlank(text)) {
@@ -82,8 +86,8 @@ public class RestPsiMethod {
         return RestPsiUtil.getMappingMethod(mappingAnnotation);
     }
 
-    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getResponseParamList() {
-        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> paramsList = new ArrayList<>();
+    public List<RestParam> getResponseParamList() {
+        ArrayList<RestParam> paramsList = new ArrayList<>();
 
         PsiClass paramClass = PsiTypesUtil.getPsiClass(returnType);
         // 通过判断能否编辑, 判断是否为内部类
@@ -94,12 +98,12 @@ public class RestPsiMethod {
         return paramsList;
     }
 
-    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getPathVariableParamList() {
-        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
+    public List<RestParam> getPathVariableParamList() {
+        ArrayList<RestParam> queryParams = new ArrayList<>();
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
             JvmAnnotation pathVariableAnnotation = parameter.getAnnotation("org.springframework.web.bind.annotation.PathVariable");
             if (pathVariableAnnotation != null) {
-                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
+                RestParam param = new RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -125,14 +129,14 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getHeadParamList() {
+    public List<RestParam> getHeadParamList() {
 
-        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
+        ArrayList<RestParam> queryParams = new ArrayList<>();
 
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
             JvmAnnotation headParamAnnotation = parameter.getAnnotation("org.springframework.web.bind.annotation.RequestHeader");
             if (headParamAnnotation != null) {
-                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
+                RestParam param = new RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -168,8 +172,8 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getQueryParamList() {
-        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> queryParams = new ArrayList<>();
+    public List<RestParam> getQueryParamList() {
+        ArrayList<RestParam> queryParams = new ArrayList<>();
 
         for (JvmParameter parameter : contentPsiMethod.getParameters()) {
 
@@ -179,7 +183,7 @@ public class RestPsiMethod {
 
             // RequestParam 字段
             if (requestParamAnnotation != null) {
-                me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
+                RestParam param = new RestParam();
 
                 // 代码参数名称
                 String psiParamName = parameter.getName();
@@ -217,6 +221,7 @@ public class RestPsiMethod {
                 // RequestBody 参数直接跳过
 
             } else {
+                // 没有注解的参数
 
                 JvmType parameterType = parameter.getType();
                 PsiClass paramClass = ((PsiClassReferenceType) parameterType).resolve();
@@ -226,10 +231,10 @@ public class RestPsiMethod {
                     // 可写代表为 自定义Param Bean
                     queryParams.addAll(RestPsiUtil.extractFieldParam(paramClass));
                 } else {
-                    // 没有定义RequestParam的路径参数
-                    // 剔除常见的第三方包的类型
+                    /// 没有定义RequestParam的路径参数
 
-                    String className = ((PsiClassReferenceType) parameterType).getClassName();
+                    // 剔除常见的第三方包的类型
+                    String className = ((PsiClassReferenceType) parameterType).getCanonicalText();
                     if (className.startsWith("org.springframework")) {
                         continue;
                     }
@@ -237,13 +242,11 @@ public class RestPsiMethod {
                         continue;
                     }
 
-                    me.joney.plugin.coderkit.apikit.bean.RestParam param = new me.joney.plugin.coderkit.apikit.bean.RestParam();
-                    // 代码参数名称
+                    // 设置参数
+                    RestParam param = new RestParam();
                     String psiParamName = parameter.getName();
                     param.setName(psiParamName);
-                    // 设置字段描述
                     param.setDescription(StringUtils.trimToEmpty(commentTagMap.get(psiParamName)));
-                    // 设置Required字段
                     param.setRequired(false);
                     param.setType(((PsiParameterImpl) parameter).getTypeElement().getText());
 
@@ -255,9 +258,9 @@ public class RestPsiMethod {
         return queryParams;
     }
 
-    public List<me.joney.plugin.coderkit.apikit.bean.RestParam> getBodyParamList() {
+    public List<RestParam> getBodyParamList() {
 
-        ArrayList<me.joney.plugin.coderkit.apikit.bean.RestParam> bodyParams = new ArrayList<>();
+        ArrayList<RestParam> bodyParams = new ArrayList<>();
 
         JvmParameter[] parameters = contentPsiMethod.getParameters();
         for (JvmParameter parameter : parameters) {
