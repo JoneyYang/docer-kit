@@ -1,8 +1,12 @@
 package me.joney.plugin.coderkit.apikit.ui;
 
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task.Backgroundable;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
+import com.intellij.openapi.ui.MessageType;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +23,9 @@ import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiConvert;
 import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDoc;
 import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiDocStruct;
 import me.joney.plugin.coderkit.apikit.xiaoyaoji.XiaoyaojiProject;
+import me.joney.plugin.coderkit.util.MessageUtil;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -47,22 +53,15 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
         this.project = project;
         this.module = module;
         this.apiDocs = doc;
+        init();
 
-        XiaoyaojiConfigInfo xiaoyaojiConfigInfo = XiaoyaojiConfigInfo.getInstance(project);
+        initPanel(project, module);
+        initListener();
+        initConnection();
 
-        hostField.setText(xiaoyaojiConfigInfo.getHost());
-        usernameField.setText(xiaoyaojiConfigInfo.getUsername());
-        passwordField.setText(xiaoyaojiConfigInfo.getPassword());
+    }
 
-        Map<String, String> urlPrefixMap = xiaoyaojiConfigInfo.getUrlPrefixMap();
-        urlPrefixField.setText(urlPrefixMap.get(module.getName()));
-
-        setTitle("Generate Xiaoyaoji Doc");
-
-        selectButton.addActionListener(e -> onSelect());
-        connectButton.addActionListener(e -> onConnect());
-        folderField.addActionListener(e -> onSelect());
-
+    private void initConnection() {
         if (StringUtils.isNotBlank(hostField.getText())
             && StringUtils.isNotBlank(usernameField.getText())
             && StringUtils.isNotBlank(passwordField.getText())) {
@@ -72,8 +71,23 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
                 e1.printStackTrace();
             }
         }
+    }
 
-        init();
+    private void initPanel(Project project, Module module) {
+        XiaoyaojiConfigInfo xiaoyaojiConfigInfo = XiaoyaojiConfigInfo.getInstance(project);
+        hostField.setText(xiaoyaojiConfigInfo.getHost());
+        usernameField.setText(xiaoyaojiConfigInfo.getUsername());
+        passwordField.setText(xiaoyaojiConfigInfo.getPassword());
+
+        Map<String, String> urlPrefixMap = xiaoyaojiConfigInfo.getUrlPrefixMap();
+        urlPrefixField.setText(urlPrefixMap.get(module.getName()));
+        setTitle("Generate Xiaoyaoji Doc");
+    }
+
+    private void initListener() {
+        selectButton.addActionListener(e -> onSelect());
+        connectButton.addActionListener(e -> onConnect());
+        folderField.addActionListener(e -> onSelect());
     }
 
     private void onConnect() {
@@ -132,25 +146,28 @@ public class GenerateXiaoyaojiDocDialog extends DialogWrapper {
 
     private void onOK() {
         onApply();
-
-        List<XiaoyaojiDoc> docs = apiDocs.stream().map(XiaoyaojiConvert::convertDoc).collect(Collectors.toList());
-        Object selectedItem = projectComboBox.getSelectedItem();
-        XiaoyaojiProject xiaoyaojiProject = (XiaoyaojiProject) selectedItem;
-
-        for (XiaoyaojiDoc xiaoyaojiDoc : docs) {
-            new Thread(() -> {
-                try {
-                    xiaoyaojiClient
-                        .createDoc(xiaoyaojiDoc, hostField.getText(), xiaoyaojiProject.getId(), selectDocStruct.getId(), urlPrefixField.getText());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-            }).start();
-
-        }
-
         dispose();
+
+        ProgressManager.getInstance().run(new Backgroundable(project, "Generate Xiaoyaoji Docs") {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                List<XiaoyaojiDoc> docs = apiDocs.stream().map(XiaoyaojiConvert::convertDoc).collect(Collectors.toList());
+                Object selectedItem = projectComboBox.getSelectedItem();
+                XiaoyaojiProject xiaoyaojiProject = (XiaoyaojiProject) selectedItem;
+                try {
+                    for (XiaoyaojiDoc xiaoyaojiDoc : docs) {
+                        xiaoyaojiClient.createDoc(xiaoyaojiDoc, hostField.getText(), xiaoyaojiProject.getId(), selectDocStruct.getId(),
+                            urlPrefixField.getText());
+
+                    }
+                } catch (IOException e) {
+                    MessageUtil.popup(project, "Generate Xiaoyaoji Doc Failure", MessageType.ERROR);
+                }
+                MessageUtil.popup(project, "Generate Xiaoyaoji Doc Success", MessageType.INFO);
+            }
+        });
+
+
     }
 
     private void onApply() {

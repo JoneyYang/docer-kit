@@ -4,6 +4,9 @@ import com.alibaba.fastjson.JSON;
 import com.intellij.openapi.fileChooser.FileChooser;
 import com.intellij.openapi.fileChooser.FileChooserDescriptor;
 import com.intellij.openapi.module.Module;
+import com.intellij.openapi.progress.ProgressIndicator;
+import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.progress.Task;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.Splitter;
@@ -13,13 +16,9 @@ import com.intellij.ui.ScrollPaneFactory;
 import com.intellij.ui.table.JBTable;
 import java.awt.Dimension;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import javax.swing.JButton;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
@@ -30,16 +29,11 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.TableModel;
 import lombok.Data;
 import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
+import me.joney.plugin.coderkit.apikit.executor.PostmanGenerator;
 import me.joney.plugin.coderkit.apikit.postman.KeyValuePair;
-import me.joney.plugin.coderkit.apikit.postman.PostmanCollection;
-import me.joney.plugin.coderkit.apikit.postman.PostmanCollection.PostmanInfo;
-import me.joney.plugin.coderkit.apikit.postman.PostmanCollection.PostmanItem;
-import me.joney.plugin.coderkit.apikit.postman.PostmanRequest;
-import me.joney.plugin.coderkit.apikit.postman.PostmanRequest.RequestBody;
-import me.joney.plugin.coderkit.apikit.postman.PostmanRequest.RequestParameter;
-import me.joney.plugin.coderkit.apikit.postman.PostmanRequest.RequestUrl;
 import me.joney.plugin.coderkit.apikit.store.PostmanStore;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -71,10 +65,14 @@ public class GeneratePostmanDialog extends DialogWrapper {
         this.project = project;
         this.docs = docs;
         this.module = module;
-        PostmanStore postmanStore = PostmanStore.getInstance(project);
 
         init();
+        initPanel();
+        initListener();
+    }
 
+    private void initPanel() {
+        PostmanStore postmanStore = PostmanStore.getInstance(project);
         prefixTextField.setText(StringUtils.trimToNull(postmanStore.getPrefixMap().get(module.getName())));
         filePathTextField.setText(StringUtils.trimToNull(postmanStore.getPath()));
 
@@ -92,8 +90,6 @@ public class GeneratePostmanDialog extends DialogWrapper {
             replaceSplitter.setFirstComponent(replacesScrollPane);
 
             replacePanel.add(replacesScrollPane);
-
-
         }
 
         {
@@ -108,9 +104,11 @@ public class GeneratePostmanDialog extends DialogWrapper {
             headsScrollPane.setPreferredSize(new Dimension(150, 125));
             headsSplitter.setFirstComponent(headsScrollPane);
             headPanel.add(headsScrollPane);
-
         }
+        contentPanel.setSize(new Dimension(400, 550));
+    }
 
+    private void initListener() {
         /// 添加事件
         chooserButton.addActionListener(e -> {
             VirtualFile fileByIoFile = null;
@@ -160,10 +158,6 @@ public class GeneratePostmanDialog extends DialogWrapper {
             int changeRow = selectedRow >= (newModelList.size() - 1) ? newModelList.size() - 1 : selectedRow;
             headsTable.changeSelection(changeRow, 0, false, false);
         });
-
-        contentPanel.setSize(new Dimension(400, 550));
-
-
     }
 
 
@@ -197,9 +191,9 @@ public class GeneratePostmanDialog extends DialogWrapper {
                 case 0:
                     return "Enable";
                 case 1:
-                    return "key";
+                    return "Key";
                 case 2:
-                    return "value";
+                    return "Value";
                 default:
                     return "";
             }
@@ -278,127 +272,12 @@ public class GeneratePostmanDialog extends DialogWrapper {
         super.doOKAction();
         onApply();
 
-        PostmanStore postmanStore = PostmanStore.getInstance(project);
-        PostmanCollection collection = new PostmanCollection();
-
-        PostmanInfo info = new PostmanInfo();
-        info.setPostmanId("dd36b8ed-603f-4e98-8565-c1030de5d9c3");
-        info.setName("Export from Intellij");
-        info.setSchema("https://schema.getpostman.com/json/collection/v2.1.0/collection.json");
-        collection.setInfo(info);
-
-        List<PostmanItem> items = docs.stream().map(doc -> {
-            PostmanItem item = new PostmanItem();
-            item.setName(doc.getName());
-
-            PostmanRequest request = new PostmanRequest();
-            request.setMethod(doc.getMethod());
-
-            StringBuilder descBuilder = new StringBuilder();
-
-            descBuilder.append(doc.getDescription()).append("\n\n");
-
-            if (!doc.getRequestPathParam().isEmpty()) {
-                descBuilder.append("\n\n路径参数:");
-                doc.getRequestPathParam().forEach(param -> {
-                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
-                    descBuilder.append("\n");
-                });
+        ProgressManager.getInstance().run(new Task.Backgroundable(project, "Generate Postman Export File") {
+            @Override
+            public void run(@NotNull ProgressIndicator indicator) {
+                new PostmanGenerator(project,module,docs).execute();
             }
-
-            if (!doc.getRequestBodyParams().isEmpty()) {
-                descBuilder.append("\n\n请求体参数:");
-                doc.getRequestBodyParams().forEach(param -> {
-                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
-                    descBuilder.append("\n");
-                });
-            }
-
-            if (!doc.getRequestBodyParams().isEmpty()) {
-                descBuilder.append("\n\n请求体参数:");
-                doc.getRequestBodyParams().forEach(param -> {
-                    descBuilder.append(param.getName()).append(":").append(param.getType()).append("\t\t").append(param.getDescription());
-                    descBuilder.append("\n");
-                });
-            }
-
-            request.setDescription(descBuilder.toString());
-            item.setRequest(request);
-
-            List<RequestParameter> heads = doc.getRequestHeadParams().stream().map(head -> {
-                RequestParameter postmanHead = new RequestParameter();
-                postmanHead.setKey(head.getName());
-                postmanHead.setValue("");
-                postmanHead.setDescription(head.getDescription());
-                return postmanHead;
-            }).collect(Collectors.toList());
-
-            List<KeyValuePair> headList = postmanStore.getHeadList();
-            List<RequestParameter> storeHeads = headList.stream().filter(KeyValuePair::getSelected).map(head -> {
-                RequestParameter postmanHead = new RequestParameter();
-                postmanHead.setKey(head.getKey());
-                postmanHead.setValue(head.getValue());
-                return postmanHead;
-            }).collect(Collectors.toList());
-            heads.addAll(storeHeads);
-
-
-
-
-            request.setHeader(heads);
-
-            RequestBody body = new RequestBody();
-            body.setMode("formdata");
-            body.setRaw("");
-//            List<RequestParameter> bodyList = doc.getRequestBodyParams().stream()
-//                .map(restParam ->
-//                    new RequestParameter().setDescription(restParam.getDescription()).setKey(restParam.getName()).setValue("")
-//                )
-//                .collect(Collectors.toList());
-//
-//            body.setFormdata(bodyList);
-
-
-            request.setBody(body);
-
-            String docUrl = doc.getUrl();
-
-            List<KeyValuePair> replaceList = postmanStore.getReplaceList();
-            for (KeyValuePair replace : replaceList) {
-                if (replace.getSelected()) {
-                    docUrl = docUrl.replace(replace.getKey(), replace.getValue());
-                }
-            }
-
-            RequestUrl url = new RequestUrl();
-            url.setRaw(docUrl);
-            url.setHost(new String[]{postmanStore.getPrefixMap().get(module.getName())});
-            url.setPath(docUrl.split("[/\\\\]"));
-            List<RequestParameter> queryList = doc.getRequestQueryParams().stream()
-                .map(query -> new RequestParameter().setKey(query.getName()).setValue("").setDescription(query.getDescription()))
-                .collect(Collectors.toList());
-            url.setQuery(queryList);
-            request.setUrl(url);
-
-            return item;
-        }).collect(Collectors.toList());
-
-        ArrayList<PostmanItem> rootFolder = new ArrayList<>();
-        rootFolder.add(new PostmanItem().setName("Requests").setItem(items));
-
-        collection.setItem(rootFolder);
-
-        try {
-            OutputStreamWriter stream = new OutputStreamWriter(new FileOutputStream(filePathTextField.getText() + "/intellij-postman-export.json"),
-                StandardCharsets.UTF_8);
-            stream.write(JSON.toJSONString(collection));
-            stream.close();
-
-            System.out.println();
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
 
     }
 
@@ -408,10 +287,6 @@ public class GeneratePostmanDialog extends DialogWrapper {
     protected JComponent createCenterPanel() {
 
         return contentPanel;
-    }
-
-    private void createUIComponents() {
-        // TODO: place custom component creation code here
     }
 
 
