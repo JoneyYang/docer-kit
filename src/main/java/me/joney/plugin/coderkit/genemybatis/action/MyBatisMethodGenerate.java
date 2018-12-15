@@ -98,7 +98,8 @@ public class MyBatisMethodGenerate extends AnAction {
             return;
         }
 
-        new MyBatisMethodGenerateUi(project,xmlFiles);
+//        MyBatisMethodGenerateUi dialog = new MyBatisMethodGenerateUi(project, xmlFiles);
+//        dialog.show();
 
 //        for (XmlFileImpl xmlFile : xmlFiles) {
 //

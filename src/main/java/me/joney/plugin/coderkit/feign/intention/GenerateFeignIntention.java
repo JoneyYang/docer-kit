@@ -1,18 +1,19 @@
 package me.joney.plugin.coderkit.feign.intention;
 
 import com.intellij.codeInsight.intention.IntentionAction;
+import com.intellij.ide.actions.GotoActionBase;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.module.Module;
-import com.intellij.openapi.module.ModuleUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.PsiIdentifier;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiMethod;
+import com.intellij.refactoring.changeSignature.JavaChangeSignatureDialog;
 import com.intellij.util.IncorrectOperationException;
-import me.joney.plugin.coderkit.apikit.bean.RestApiDoc;
-import me.joney.plugin.coderkit.util.RestDocFactory;
+import me.joney.plugin.coderkit.feign.ui.DemoDialog;
+import me.joney.plugin.coderkit.feign.ui.DemoTable2Dialog;
+import me.joney.plugin.coderkit.feign.ui.DemoTableDialog;
 import me.joney.plugin.coderkit.util.RestPsiUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
@@ -58,23 +59,71 @@ public class GenerateFeignIntention implements IntentionAction {
         }
     }
 
-    @Override
-    public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
-        PsiElement element = file.findElementAt(editor.getCaretModel().getOffset());
-        PsiElement parentElement = element.getParent();
-        PsiMethod psiMethod = (PsiMethod) parentElement;
 
-        Module module = ModuleUtil.findModuleForFile(file);
-        String controllerMappingValue = RestPsiUtil.extractMappingValue(RestPsiUtil.extractMappingAnnotation(psiMethod.getContainingClass()));
-        String methodMappingValue = RestPsiUtil.extractMappingValue(RestPsiUtil.extractMappingAnnotation(psiMethod));
-        String url = controllerMappingValue + "/" + methodMappingValue;
-
-        RestApiDoc restApiDoc = RestDocFactory.exportDoc(psiMethod);
-
-    }
 
     @Override
     public boolean startInWriteAction() {
         return false;
     }
+
+    @Override
+    public void invoke(@NotNull Project project, Editor editor, PsiFile file) throws IncorrectOperationException {
+        if (!(file instanceof PsiJavaFile)) {
+            return;
+        }
+
+        PsiElement element = file.findElementAt(editor.getCaretModel().getOffset());
+        PsiElement parentElement = element.getParent();
+        if (!(parentElement instanceof PsiMethod)) {
+            return;
+        }
+        PsiMethod psiMethod = (PsiMethod) parentElement;
+
+        PsiElement psiContext = GotoActionBase.getPsiContext(project);
+
+        DemoTable2Dialog demoDialog = new DemoTable2Dialog(project, true,psiContext);
+        demoDialog.show();
+
+//        GotoClassModel2 model = new GotoClassModel2(project);
+//        ChooseByNamePopup popup = ChooseByNamePopup.createPopup(project, model, element);
+//        popup.invoke(new Callback() {
+//            @Override
+//            public void elementChosen(Object element) {
+//                System.out.println("haha");
+//            }
+//        }, ModalityState.defaultModalityState(),false);
+//
+//
+//        DumbService.getInstance(project).showDumbModeNotification("Message ");
+//        ArrayList<ParameterInfoImpl> objects = new ArrayList<>();
+//        JavaChangeSignatureDialog dialog = new JavaChangeSignatureDialog(project, psiMethod, true, psiContext);
+//        dialog.show();
+//        TestDialog testDialog = new TestDialog(project, psiMethod, true, psiContext);
+//        testDialog.show();
+//
+//        Collection<Module> list = FindClassUtil.findModulesWithClass(project, "List");
+//        dialog.show();
+
+//        final JavaCodeFragmentFactory factory = JavaCodeFragmentFactory.getInstance(project);
+//        PsiTypeCodeFragment fragment = factory.createTypeCodeFragment("List", psiMethod, true, JavaCodeFragmentFactory.ALLOW_VOID);
+//        System.out.println(fragment);
+
+
+//        final String returnTypeText = StringUtil.notNullize(myMethod.getReturnTypeText());
+//        final JavaCodeFragmentFactory factory = JavaCodeFragmentFactory.getInstance(myProject);
+//        return factory.createTypeCodeFragment(returnTypeText, myMethod.getMethod(), true, JavaCodeFragmentFactory.ALLOW_VOID);
+
+//        final List<ParameterInfoImpl> parameterInfos = new ArrayList<>();
+//        final PsiReferenceExpression refExpr = JavaTargetElementEvaluator.findReferenceExpression(editor);
+//
+//        GenerateFeignDialog dialog = new GenerateFeignDialog(project, true);
+//        dialog.show();
+//
+//        System.out.println("END");
+
+//        JavaCallerChooser chooser = new JavaCallerChooser(psiMethod, project, "xxx", null, null);
+//        chooser.show();
+
+    }
+
 }

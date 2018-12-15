@@ -299,8 +299,12 @@ public class RestPsiUtil {
 
     @NotNull
     public static HashMap<String, String> extractDocParamTagMap(PsiDocComment methodDocComment) {
-        PsiDocTag[] paramTags = methodDocComment.findTagsByName("param");
         HashMap<String, String> tagMap = new HashMap<>();
+        if (methodDocComment == null) {
+            return tagMap;
+        }
+
+        PsiDocTag[] paramTags = methodDocComment.findTagsByName("param");
         for (PsiDocTag paramTag : paramTags) {
             PsiElement[] dataElements = paramTag.getDataElements();
             tagMap.put(dataElements[0].getText(), dataElements[1].getText());

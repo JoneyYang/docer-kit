@@ -1,9 +1,10 @@
 package me.joney.plugin.coderkit.genemybatis.ui;
 
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.psi.impl.source.xml.XmlFileImpl;
 import com.intellij.psi.xml.XmlTag;
-import java.awt.Dimension;
+import com.intellij.ui.EditorTextField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -11,23 +12,23 @@ import java.util.Set;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
-import javax.swing.JDialog;
+import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
-import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import me.joney.plugin.coderkit.genemybatis.bean.MapperResult;
 import me.joney.plugin.coderkit.genemybatis.bean.MapperXml;
 import me.joney.plugin.coderkit.genemybatis.bean.MapperXmlTag;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
  * @author yang.qiang
  * @date 2018/10/31
  */
-public class MyBatisMethodGenerateUi extends JDialog {
+public class MyBatisMethodGenerateUi extends DialogWrapper {
 
     private static final long serialVersionUID = -6688892856120994087L;
+    private Set<XmlFileImpl> xmlFiles;
     private Project project;
 
     private JPanel contentPanel;
@@ -39,67 +40,47 @@ public class MyBatisMethodGenerateUi extends JDialog {
     private JRadioButton multipleRadioButton;
     private JRadioButton singleRadioButton;
     private JCheckBox limitOneCheckBox;
-    private JTextField returnTypeField;
-    private JTextField textField2;
     private JButton chooserButton;
-    private JTextArea textArea1;
+    private EditorTextField returnTypeField;
+    private JPanel conditionsPanel;
+    private JPanel returnPanel;
 
 
 
     public MyBatisMethodGenerateUi(Project project, Set<XmlFileImpl> xmlFiles) {
+        super(project);
         this.project = project;
+        this.xmlFiles = xmlFiles;
 
-        // 设置触发事件
-        mapperXmlSelectBox.addActionListener(event -> onMapperXmlActivate());
-        resultMapSelectBox.addActionListener(event -> onResultMapActivate());
-        oKButton.addActionListener(event -> onOk());
-        cancelButton.addActionListener(event -> onCancel());
-        singleRadioButton.addActionListener(event -> onSingleReturn());
-        multipleRadioButton.addActionListener(event -> onMultipleReturn());
-        chooserButton.addActionListener(event -> onChooser());
-
-        // 添加xml选择项
-        for (XmlFileImpl xmlFile : xmlFiles) {
-            mapperXmlSelectBox.addItem(new MapperXml(xmlFile));
-            mapperXmlSelectBox.setEnabled(true);
-        }
-
-        if (!xmlFiles.isEmpty()) {
-            mapperXmlSelectBox.setSelectedIndex(0);
-        }
-
-        setTitle("Generate MyBatis Method");
-        setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-        setContentPane(contentPanel);
-        pack();
-        setVisible(true);
-
-        Dimension screenSize = java.awt.Toolkit.getDefaultToolkit().getScreenSize();
-        Dimension frameSize = this.getSize();
-        this.setLocation((screenSize.width - frameSize.width) / 2, (screenSize.height - frameSize.height) / 2);
-
+        initPanel();
+        initListener(xmlFiles);
     }
 
-    private void onChooser() {
-        MapperXmlTag selectedItem = (MapperXmlTag) resultMapSelectBox.getSelectedItem();
-        if (selectedItem == null) {
-            return;
-        }
-
-        ArrayList<MapperResult> mapperResults = new ArrayList<>();
-        XmlTag[] subTags = selectedItem.getXmlTag().getSubTags();
-        for (XmlTag subTag : subTags) {
-            if ("result".equals(subTag.getName())) {
-                mapperResults.add(new MapperResult(subTag.getAttributeValue("result"), subTag.getAttributeValue("property")));
-            } else if ("id".equals(subTag.getName())) {
-                mapperResults.add(new MapperResult(subTag.getAttributeValue("id"), subTag.getAttributeValue("property")));
-            }
-        }
-
-        WhereConditionChooser chooser = new WhereConditionChooser(project, mapperResults);
-        chooser.show();
-
+    private void initPanel() {
+        init();
     }
+
+
+//    private void onChooser() {
+//        MapperXmlTag selectedItem = (MapperXmlTag) resultMapSelectBox.getSelectedItem();
+//        if (selectedItem == null) {
+//            return;
+//        }
+//
+//        ArrayList<MapperResult> mapperResults = new ArrayList<>();
+//        XmlTag[] subTags = selectedItem.getXmlTag().getSubTags();
+//        for (XmlTag subTag : subTags) {
+//            if ("result".equals(subTag.getName())) {
+//                mapperResults.add(new MapperResult(subTag.getAttributeValue("result"), subTag.getAttributeValue("property")));
+//            } else if ("id".equals(subTag.getName())) {
+//                mapperResults.add(new MapperResult(subTag.getAttributeValue("id"), subTag.getAttributeValue("property")));
+//            }
+//        }
+//
+//        WhereConditionChooser chooser = new WhereConditionChooser(project, mapperResults);
+//        chooser.show();
+//
+//    }
 
     private void onSingleReturn() {
         multipleRadioButton.setSelected(false);
@@ -155,4 +136,33 @@ public class MyBatisMethodGenerateUi extends JDialog {
 
         return Arrays.asList(resultMaps);
     }
+
+
+
+    private void initListener(Set<XmlFileImpl> xmlFiles) {
+        // 设置触发事件
+        mapperXmlSelectBox.addActionListener(event -> onMapperXmlActivate());
+        resultMapSelectBox.addActionListener(event -> onResultMapActivate());
+        oKButton.addActionListener(event -> onOk());
+        cancelButton.addActionListener(event -> onCancel());
+        singleRadioButton.addActionListener(event -> onSingleReturn());
+        multipleRadioButton.addActionListener(event -> onMultipleReturn());
+
+        // 添加xml选择项
+        for (XmlFileImpl xmlFile : xmlFiles) {
+            mapperXmlSelectBox.addItem(new MapperXml(xmlFile));
+            mapperXmlSelectBox.setEnabled(true);
+        }
+        if (!xmlFiles.isEmpty()) {
+            mapperXmlSelectBox.setSelectedIndex(0);
+        }
+    }
+
+    @Nullable
+    @Override
+    protected JComponent createCenterPanel() {
+        return contentPanel;
+    }
+
+
 }
