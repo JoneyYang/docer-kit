@@ -48,7 +48,10 @@ public class DemoTable2Dialog extends DialogWrapper {
     private PsiElement psiContext;
     private Project project;
 
-    private JPanel content = new JPanel();
+    private JPanel contentPanel = new JPanel();
+
+
+
     private TableView<ConditionItem> tableView;
     private ListTableModel<ConditionItem> tableModel;
 
@@ -93,15 +96,14 @@ public class DemoTable2Dialog extends DialogWrapper {
      * 初始化组件
      */
     private void initComponents() {
-        tableView = createTableView();
-        JBListTable listTable = createListTable();
-        JPanel tablePanel = createTablePanel(listTable);
-        content.add(tablePanel);
-//        JBListTable listTable;
+        tableView = createConditionsTableView();
+        JBListTable listTable = createConditionsListTable();
+        JPanel tablePanel = createConditionsTablePanel(listTable);
+        contentPanel.add(tablePanel);
         init();
     }
 
-    private JPanel createTablePanel(JBListTable listTable) {
+    private JPanel createConditionsTablePanel(JBListTable listTable) {
         JPanel panel = ToolbarDecorator.createDecorator(listTable.getTable())
             .setAddAction(anActionButton -> {
                 ConditionItem newItem = new ConditionItem();
@@ -112,7 +114,7 @@ public class DemoTable2Dialog extends DialogWrapper {
         return panel;
     }
 
-    private JBListTable createListTable() {
+    private JBListTable createConditionsListTable() {
         return new JBListTable(tableView, DemoTable2Dialog.this.getDisposable()) {
             JBTableRowRenderer renderer = new EditorTextFieldJBTableRowRenderer(project, StdFileTypes.JAVA, DemoTable2Dialog.this.getDisposable()) {
                 @Override
@@ -341,7 +343,7 @@ public class DemoTable2Dialog extends DialogWrapper {
         };
     }
 
-    private TableView<ConditionItem> createTableView() {
+    private TableView<ConditionItem> createConditionsTableView() {
         tableModel = new ListTableModel<>();
         return new TableView<>(tableModel);
     }
@@ -349,6 +351,6 @@ public class DemoTable2Dialog extends DialogWrapper {
     @Nullable
     @Override
     protected JComponent createCenterPanel() {
-        return content;
+        return contentPanel;
     }
 }

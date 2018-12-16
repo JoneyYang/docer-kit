@@ -11,12 +11,12 @@ import lombok.Data;
  * @date 2018/10/21
  */
 @Data
-public class SetterMember {
+public class BeanMember {
 
     private PsiMethod method;
     private PsiField field;
 
-    public SetterMember(PsiField field, PsiMethod method) {
+    public BeanMember(PsiField field, PsiMethod method) {
         this.method = method;
         this.field = field;
     }

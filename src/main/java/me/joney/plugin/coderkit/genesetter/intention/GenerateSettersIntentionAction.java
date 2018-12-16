@@ -3,6 +3,7 @@ package me.joney.plugin.coderkit.genesetter.intention;
 import com.intellij.codeInsight.intention.IntentionAction;
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.lang.jvm.types.JvmType;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
@@ -24,7 +25,7 @@ import com.intellij.psi.util.PsiTypesUtil;
 import com.intellij.util.IncorrectOperationException;
 import java.util.ArrayList;
 import java.util.List;
-import me.joney.plugin.coderkit.genesetter.SetterMember;
+import me.joney.plugin.coderkit.genesetter.BeanMember;
 import me.joney.plugin.coderkit.genesetter.ui.GenerateSetterFieldChooser;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nls.Capitalization;
@@ -77,7 +78,7 @@ public class GenerateSettersIntentionAction implements IntentionAction {
         PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
         Document document = psiDocumentManager.getDocument(element.getContainingFile());
 
-        ArrayList<SetterMember> setterMembers = new ArrayList<>();
+        ArrayList<BeanMember> setterMembers = new ArrayList<>();
 
         //// 获取有setter 字段
         for (PsiField field : psiClass.getFields()) {
@@ -96,7 +97,7 @@ public class GenerateSettersIntentionAction implements IntentionAction {
                     JvmType paramType = parameters[0].getType();
                     PsiType fieldType = field.getType();
                     if (fieldType.getInternalCanonicalText().equals(((PsiClassReferenceType) paramType).getInternalCanonicalText())) {
-                        setterMembers.add(new SetterMember(field, method));
+                        setterMembers.add(new BeanMember(field, method));
                     }
                 }
             }
@@ -105,7 +106,7 @@ public class GenerateSettersIntentionAction implements IntentionAction {
         GenerateSetterFieldChooser chooser = new GenerateSetterFieldChooser(setterMembers, project);
         chooser.show();
 
-        List<SetterMember> selectedElements = chooser.getSelectedElements();
+        List<BeanMember> selectedElements = chooser.getSelectedElements();
         if (selectedElements.isEmpty()) {
             return;
         }
@@ -116,20 +117,20 @@ public class GenerateSettersIntentionAction implements IntentionAction {
         String linePrefix = lineText.replaceFirst("^(\\s+).*$","$1");
 
         // 生成代码
-        StringBuilder sb = new StringBuilder();
-        sb.append("\n");
-        for (SetterMember selectedElement : selectedElements) {
-            sb.append(linePrefix);
-            sb.append(element.getText());
-            sb.append(".").append(selectedElement.getMethod().getName());
-            sb.append("(").append("null").append(");\n");
-        }
-        sb.append("\n");
 
-        document.insertString(textOffset + 1, sb.toString());
+        ApplicationManager.getApplication().runWriteAction(() -> {
 
-        System.out.println(setterMembers);
-
+            StringBuilder sb = new StringBuilder();
+            sb.append("\n");
+            for (BeanMember selectedElement : selectedElements) {
+                sb.append(linePrefix);
+                sb.append(element.getText());
+                sb.append(".").append(selectedElement.getMethod().getName());
+                sb.append("(").append("null").append(");\n");
+            }
+            sb.append("\n");
+            document.insertString(textOffset + 1, sb.toString());
+        });
 
     }
 

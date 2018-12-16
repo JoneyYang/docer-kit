@@ -25,7 +25,6 @@ import com.intellij.psi.impl.source.resolve.reference.impl.providers.JavaClassRe
 import com.intellij.psi.impl.source.resolve.reference.impl.providers.JavaClassReferenceSet;
 import com.intellij.psi.impl.source.xml.XmlFileImpl;
 import com.intellij.psi.search.PsiElementProcessor;
-import com.intellij.psi.xml.XmlAttribute;
 import com.intellij.psi.xml.XmlTag;
 import com.intellij.refactoring.psi.SearchUtils;
 import java.util.ArrayList;
@@ -98,8 +97,8 @@ public class MyBatisMethodGenerate extends AnAction {
             return;
         }
 
-//        MyBatisMethodGenerateUi dialog = new MyBatisMethodGenerateUi(project, xmlFiles);
-//        dialog.show();
+        MyBatisMethodGenerateUi dialog = new MyBatisMethodGenerateUi(project, xmlFiles, psiFile);
+        dialog.show();
 
 //        for (XmlFileImpl xmlFile : xmlFiles) {
 //
