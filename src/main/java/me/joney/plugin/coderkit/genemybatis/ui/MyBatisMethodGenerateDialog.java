@@ -2,7 +2,9 @@ package me.joney.plugin.coderkit.genemybatis.ui;
 
 import com.intellij.codeInsight.generation.ui.SimpleFieldChooser;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.command.undo.UndoUtil;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.EditorFontType;
@@ -29,6 +31,8 @@ import com.intellij.ui.EditorTextField;
 import com.intellij.ui.SeparatorFactory;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.ToolbarDecorator;
+import com.intellij.ui.components.JBScrollPane;
+import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.DialogUtil;
 import com.intellij.util.ui.ListTableModel;
@@ -43,6 +47,8 @@ import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.Rectangle;
+import java.awt.TextArea;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,6 +60,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -69,7 +76,7 @@ import org.jetbrains.annotations.Nullable;
  * @author yang.qiang
  * @date 2018/10/31
  */
-public class MyBatisMethodGenerateUi extends DialogWrapper {
+public class MyBatisMethodGenerateDialog extends DialogWrapper {
 
     private Set<XmlFileImpl> xmlFiles;
     private Project project;
@@ -104,10 +111,12 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
     private JLabel mapperXmlLabel;
     private JLabel methodNameLabel;
     private JLabel descriptionLabel;
+    private JTextArea sqlPreviewTextField;
+    private JTextArea methodPreviewTextField;
 
 
 
-    public MyBatisMethodGenerateUi(Project project, Set<XmlFileImpl> xmlFiles, PsiElement psiContext) {
+    public MyBatisMethodGenerateDialog(Project project, Set<XmlFileImpl> xmlFiles, PsiElement psiContext) {
         super(project);
         this.project = project;
         this.xmlFiles = xmlFiles;
@@ -215,10 +224,19 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
 
     private void initListener(Set<XmlFileImpl> xmlFiles) {
         // 设置触发事件
-        mapperXmlComboBox.addActionListener(event -> onMapperXmlActivate());
+        mapperXmlComboBox.addActionListener(event -> {
+            onMapperXmlActivate();
+        });
         resultMapComboBox.addActionListener(event -> onResultMapActivate());
-        singleRadioButton.addActionListener(event -> onSingleReturn());
-        multipleRadioButton.addActionListener(event -> onMultipleReturn());
+        singleRadioButton.addActionListener(event -> {
+            onSingleReturn();
+            updatePreview();
+        });
+        multipleRadioButton.addActionListener(event -> {
+            onMultipleReturn();
+            updatePreview();
+        });
+        limitOneCheckBox.addActionListener(e -> updatePreview());
         resultMapCheckBox.addActionListener(event -> {
             resultMapComboBox.setEnabled(resultMapCheckBox.isSelected());
             returnTypeTextField.setEnabled(!resultMapCheckBox.isSelected());
@@ -226,6 +244,15 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
             if (resultMapCheckBox.isSelected()) {
                 onResultMapActivate();
 
+            }
+        });
+
+        methodNameField.addCaretListener(e ->updatePreview());
+        descriptionTextField.addCaretListener(e -> updatePreview());
+        returnTypeTextField.addDocumentListener(new DocumentListener() {
+            @Override
+            public void documentChanged(DocumentEvent event) {
+                updatePreview();
             }
         });
 
@@ -285,29 +312,29 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
         {
 
             JPanel panel = new JPanel(new BorderLayout());
-            panel.add(SeparatorFactory.createSeparator("SQL Preview", null), BorderLayout.NORTH);
-            EditorTextField editorTextField = new EditorTextField("select * from user\n where age = 18", project, StdFileTypes.XML);
-            editorTextField.setFont(EditorColorsManager.getInstance().getGlobalScheme().getFont(EditorFontType.PLAIN));
-            editorTextField.setBackground(EditorColorsManager.getInstance().getGlobalScheme().getColor(EditorColors.CARET_ROW_COLOR));
-            editorTextField.setEnabled(false);
-            editorTextField.setPreferredSize(new Dimension(-1, 80));
-            editorTextField.setMinimumSize(new Dimension(-1, 80));
-            panel.add(editorTextField, BorderLayout.CENTER);
+            panel.add(SeparatorFactory.createSeparator("Mapper Xml Preview", null), BorderLayout.NORTH);
+            sqlPreviewTextField = new JTextArea("",5,1);
+            sqlPreviewTextField.setFont(EditorColorsManager.getInstance().getGlobalScheme().getFont(EditorFontType.PLAIN));
+            sqlPreviewTextField.setBackground(EditorColorsManager.getInstance().getGlobalScheme().getColor(EditorColors.CARET_ROW_COLOR));
+            sqlPreviewTextField.setEnabled(false);
+
+            panel.add(new JBScrollPane(sqlPreviewTextField), BorderLayout.CENTER);
             xmlPreviewPanel.add(panel);
         }
+
 
         {
 
             JPanel panel = new JPanel(new BorderLayout());
             panel.add(SeparatorFactory.createSeparator("Mapper Method Preview", null), BorderLayout.NORTH);
-            EditorTextField editorTextField = new EditorTextField("public static void main(){\n   System.out.println();}", project, StdFileTypes.XML);
-            editorTextField.setFont(EditorColorsManager.getInstance().getGlobalScheme().getFont(EditorFontType.PLAIN));
-            editorTextField.setBackground(EditorColorsManager.getInstance().getGlobalScheme().getColor(EditorColors.CARET_ROW_COLOR));
-            editorTextField.setEnabled(false);
-            editorTextField.setPreferredSize(new Dimension(-1, 80));
-            editorTextField.setMinimumSize(new Dimension(-1, 80));
-            panel.add(editorTextField, BorderLayout.CENTER);
+            methodPreviewTextField = new JTextArea("",5,1);
+            methodPreviewTextField.setFont(EditorColorsManager.getInstance().getGlobalScheme().getFont(EditorFontType.PLAIN));
+            methodPreviewTextField.setBackground(EditorColorsManager.getInstance().getGlobalScheme().getColor(EditorColors.CARET_ROW_COLOR));
+            methodPreviewTextField.setEnabled(false);
+            panel.add(new JBScrollPane(methodPreviewTextField), BorderLayout.CENTER);
             mapperPreviewPanel.add(panel);
+
+//            mapperPreviewPanel.add(new JBScrollPane(new JTextArea("xxxxxxxxx",5,1)));
         }
 
         // 设置快捷点绑定
@@ -324,18 +351,20 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
 
     private TableView<ConditionItem> createConditionsTableView() {
         conditionsTableModel = new ListTableModel<>();
+        conditionsTableModel.addTableModelListener(e -> updatePreview());
         return new TableView<>(conditionsTableModel);
     }
 
     private TableView<OrderItem> createOrdersTableView() {
         ordersTableModel = new ListTableModel<>();
+        ordersTableModel.addTableModelListener(e -> updatePreview());
         return new TableView<>(ordersTableModel);
     }
 
     private JBListTable createOrdersListTable() {
-        return new JBListTable(ordersTableView, MyBatisMethodGenerateUi.this.getDisposable()) {
+        return new JBListTable(ordersTableView, MyBatisMethodGenerateDialog.this.getDisposable()) {
             JBTableRowRenderer renderer = new EditorTextFieldJBTableRowRenderer(project, StdFileTypes.JAVA,
-                MyBatisMethodGenerateUi.this.getDisposable()) {
+                MyBatisMethodGenerateDialog.this.getDisposable()) {
                 @Override
                 protected String getText(JTable table, int row) {
                     OrderItem item = ordersTableView.getRow(row);
@@ -391,10 +420,14 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                         fieldNameTextField.addDocumentListener(new DocumentListener() {
                             @Override
                             public void documentChanged(DocumentEvent event) {
+                                updatePreview();
                                 item.setParamFieldName(event.getDocument().getText());
                             }
                         });
-                        orderTypeComboBox.addActionListener(e -> item.setOrderType(orderTypeComboBox.getSelectedItem().toString()));
+                        orderTypeComboBox.addActionListener(e -> {
+                            updatePreview();
+                            item.setOrderType(orderTypeComboBox.getSelectedItem().toString());
+                        });
                         /// 组件布局
                         setLayout(new GridLayout(1, 0));
                         {
@@ -528,9 +561,9 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
     }
 
     private JBListTable createConditionsListTable() {
-        return new JBListTable(conditionsTableView, MyBatisMethodGenerateUi.this.getDisposable()) {
+        return new JBListTable(conditionsTableView, MyBatisMethodGenerateDialog.this.getDisposable()) {
             JBTableRowRenderer renderer = new EditorTextFieldJBTableRowRenderer(project, StdFileTypes.JAVA,
-                MyBatisMethodGenerateUi.this.getDisposable()) {
+                MyBatisMethodGenerateDialog.this.getDisposable()) {
                 @Override
                 protected String getText(JTable table, int row) {
                     ConditionItem item = conditionsTableView.getRow(row);
@@ -539,7 +572,7 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                     }
 
                     return item.getParamFieldName() + " " + item.getOperator() + " " + item.getValue() + " // " + StringUtils
-                        .trimToNull(item.getDescription());
+                        .trimToEmpty(item.getDescription());
                 }
             };
 
@@ -636,9 +669,12 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                             } else {
                                 fieldNameText.requestFocus();
                             }
+
+                            updatePreview();
                         });
                         operatorCombo.addActionListener(e -> {
                             item.setOperator(operatorCombo.getSelectedItem().toString());
+                            updatePreview();
                         });
                         checkNullBox.addChangeListener(e -> item.setCheckNull(checkNullBox.isSelected()));
                         paramNameText.addDocumentListener(new DocumentListener() {
@@ -657,12 +693,14 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                                         valueText.setText(convertParamNameToFieldValue(text));
                                     }
                                 }
+                                updatePreview();
                             }
                         });
                         typeText.addDocumentListener(new DocumentListener() {
                             @Override
                             public void documentChanged(DocumentEvent event) {
                                 item.setParamType(event.getDocument().getText());
+                                updatePreview();
                             }
                         });
                         fieldNameText.addDocumentListener(new DocumentListener() {
@@ -673,6 +711,7 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                                     fieldNameTextModifyFlag = true;
                                 }
                                 item.setParamFieldName(event.getDocument().getText());
+                                updatePreview();
                             }
                         });
                         valueText.addDocumentListener(new DocumentListener() {
@@ -682,12 +721,14 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                                     valueTextModifyFlag = true;
                                 }
                                 item.setValue(event.getDocument().getText());
+                                updatePreview();
                             }
                         });
                         descText.addDocumentListener(new DocumentListener() {
                             @Override
                             public void documentChanged(DocumentEvent event) {
                                 item.setDescription(event.getDocument().getText());
+                                updatePreview();
                             }
                         });
 
@@ -756,6 +797,95 @@ public class MyBatisMethodGenerateUi extends DialogWrapper {
                 };
             }
         };
+    }
+
+    void updatePreview() {
+        updateSqlPreview();
+        updateMethodPreview();
+    }
+
+    private void updateSqlPreview() {
+        StringBuilder sb = new StringBuilder();
+        List<ConditionItem> conditionItems = conditionsTableModel.getItems();
+        for (int i = 0; i < conditionItems.size(); i++) {
+            ConditionItem item = conditionItems.get(i);
+
+            if (StringUtils.isBlank(item.getParamFieldName())
+                || StringUtils.isBlank(item.getOperator())
+                || StringUtils.isBlank(item.getValue())) {
+                continue;
+            }
+            sb.append(getConditionModifier(i))
+                .append(" ").append(item.getParamFieldName())
+                .append(" ").append(item.getOperator())
+                .append(" ").append(item.getValue())
+            ;
+            sb.append("  \n");
+        }
+        List<OrderItem> orderItems = ordersTableModel.getItems();
+        for (OrderItem orderItem : orderItems) {
+            if (StringUtils.isBlank(orderItem.getParamFieldName())
+                || StringUtils.isBlank(orderItem.getOrderType())) {
+                continue;
+            }
+
+            sb.append("\n    order by");
+            sb.append(orderItem.getParamFieldName());
+            sb.append(" ").append(orderItem.getOrderType());
+            sb.append(",");
+        }
+        sb = new StringBuilder(sb.toString().replaceAll(",$",""));
+
+        if (limitOneCheckBox.isSelected() && singleRadioButton.isSelected()) {
+            sb.append("limit 1");
+        }
+
+        sqlPreviewTextField.setText(sb.toString().trim());
+    }
+
+    private void updateMethodPreview() {
+        StringBuilder sb = new StringBuilder();
+        // 方法注释
+
+        sb.append("/**");
+        sb.append("\n  *").append(descriptionTextField.getText().trim());
+        for (ConditionItem item : conditionsTableModel.getItems()) {
+            if (!item.isParam) {
+                continue;
+            }
+            sb.append("\n  * @Param ").append(item.getParamName()).append(" ").append(item.getDescription());
+
+        }
+        sb.append("\n  * @Return ").append(returnTypeTextField.getText().trim());
+        sb.append("\n  */\n");
+
+        sb.append("public");
+
+        if (multipleRadioButton.isSelected()) {
+            sb.append(" ").append("List<").append(returnTypeTextField.getText().trim()).append(">");
+        } else {
+            sb.append(" ").append(returnTypeTextField.getText().trim());
+        }
+
+        sb.append(" ").append(methodNameField.getText().trim()).append("(");
+        for (ConditionItem conditionItem : conditionsTableModel.getItems()) {
+            if (!conditionItem.getIsParam()) {
+                return;
+            }
+            sb.append("\n      @Param(\"").append(conditionItem.getParamName()).append(")");
+            sb.append(" ").append(conditionItem.getParamType()).append(" ").append(conditionItem.getParamName());
+            sb.append(",");
+        }
+        sb = new StringBuilder(sb.toString().replaceAll("(.*),$", "$1"));
+
+        sb.append(");");
+
+        methodPreviewTextField.setText(sb.toString());
+
+    }
+
+    private String getConditionModifier(int location) {
+        return location == 0 ? "where" : "    and";
     }
 
 

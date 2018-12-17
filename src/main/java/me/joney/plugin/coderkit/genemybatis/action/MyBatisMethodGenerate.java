@@ -32,7 +32,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import me.joney.plugin.coderkit.genemybatis.ui.MyBatisMethodGenerateUi;
+import me.joney.plugin.coderkit.genemybatis.ui.MyBatisMethodGenerateDialog;
 import org.jetbrains.annotations.NotNull;
 
 /**
@@ -97,7 +97,7 @@ public class MyBatisMethodGenerate extends AnAction {
             return;
         }
 
-        MyBatisMethodGenerateUi dialog = new MyBatisMethodGenerateUi(project, xmlFiles, psiFile);
+        MyBatisMethodGenerateDialog dialog = new MyBatisMethodGenerateDialog(project, xmlFiles, psiFile);
         dialog.show();
 
 //        for (XmlFileImpl xmlFile : xmlFiles) {
