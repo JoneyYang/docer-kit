@@ -2,9 +2,8 @@ package me.joney.plugin.coderkit.genemybatis.ui;
 
 import com.intellij.codeInsight.generation.ui.SimpleFieldChooser;
 import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.command.undo.UndoUtil;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.EditorFactory;
 import com.intellij.openapi.editor.colors.EditorColors;
 import com.intellij.openapi.editor.colors.EditorColorsManager;
 import com.intellij.openapi.editor.colors.EditorFontType;
@@ -17,9 +16,9 @@ import com.intellij.openapi.ui.DialogWrapper;
 import com.intellij.openapi.ui.VerticalFlowLayout;
 import com.intellij.psi.JavaCodeFragment;
 import com.intellij.psi.JavaCodeFragmentFactory;
+import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiCodeFragment;
 import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiType;
 import com.intellij.psi.impl.source.PsiTypeCodeFragmentImpl;
@@ -32,7 +31,6 @@ import com.intellij.ui.SeparatorFactory;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.ToolbarDecorator;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.ui.components.JBTextField;
 import com.intellij.ui.table.TableView;
 import com.intellij.util.ui.DialogUtil;
 import com.intellij.util.ui.ListTableModel;
@@ -43,16 +41,17 @@ import com.intellij.util.ui.table.JBListTable;
 import com.intellij.util.ui.table.JBTableRow;
 import com.intellij.util.ui.table.JBTableRowEditor;
 import com.intellij.util.ui.table.JBTableRowRenderer;
+import com.siyeh.ig.threading.SynchronizationOnStaticFieldInspection;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
-import java.awt.Rectangle;
-import java.awt.TextArea;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
@@ -80,7 +79,8 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
 
     private Set<XmlFileImpl> xmlFiles;
     private Project project;
-    private PsiElement psiContext;
+    private PsiClass mapperInterfacePisClass;
+    private MapperXml selectedXml;
 
     private JPanel contentPanel;
 
@@ -116,11 +116,11 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
 
 
 
-    public MyBatisMethodGenerateDialog(Project project, Set<XmlFileImpl> xmlFiles, PsiElement psiContext) {
+    public MyBatisMethodGenerateDialog(Project project, Set<XmlFileImpl> xmlFiles, PsiClass mapperInterfacePisClass) {
         super(project);
         this.project = project;
         this.xmlFiles = xmlFiles;
-        this.psiContext = psiContext;
+        this.mapperInterfacePisClass = mapperInterfacePisClass;
 
         initComponents();
         initListener(xmlFiles);
@@ -172,7 +172,7 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
     }
 
     private void onMapperXmlActivate() {
-        MapperXml selectedXml = (MapperXml) mapperXmlComboBox.getSelectedItem();
+        selectedXml = (MapperXml) mapperXmlComboBox.getSelectedItem();
         if (selectedXml == null) {
             return;
         }
@@ -298,7 +298,7 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
         ///  设置ReturnType
         JavaCodeFragmentFactory f = JavaCodeFragmentFactory.getInstance(project);
         // TODO 优化Type初始化
-        returnTypeCodeFragment = f.createTypeCodeFragment("", psiContext, true, JavaCodeFragmentFactory.ALLOW_ELLIPSIS);
+        returnTypeCodeFragment = f.createTypeCodeFragment("", mapperInterfacePisClass, true, JavaCodeFragmentFactory.ALLOW_ELLIPSIS);
         final Document document = PsiDocumentManager.getInstance(project).getDocument(returnTypeCodeFragment);
         returnTypeTextField = new EditorTextField(document, project, StdFileTypes.JAVA);
         returnTypeTextField.setEnabled(false);
@@ -628,7 +628,7 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
                         paramNameText.setEnabled(item.getIsParam());
 
                         JavaCodeFragmentFactory f = JavaCodeFragmentFactory.getInstance(project);
-                        typeFragment = f.createTypeCodeFragment(item.getParamType() == null ? "" : item.getParamType(), psiContext, true,
+                        typeFragment = f.createTypeCodeFragment(item.getParamType() == null ? "" : item.getParamType(), mapperInterfacePisClass, true,
                             JavaCodeFragmentFactory.ALLOW_ELLIPSIS);
                         final Document document = PsiDocumentManager.getInstance(project).getDocument(typeFragment);
                         typeText = new EditorTextField(document, project, StdFileTypes.JAVA);
@@ -804,24 +804,93 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
         updateMethodPreview();
     }
 
+    @Override
+    protected void doOKAction() {
+
+        WriteCommandAction.runWriteCommandAction(project, () -> {
+            // 生成method代码
+            PsiDocumentManager psiDocumentManager = PsiDocumentManager.getInstance(project);
+            Document document = psiDocumentManager.getDocument(mapperInterfacePisClass.getContainingFile());
+            int offset = mapperInterfacePisClass.getChildren()[mapperInterfacePisClass.getChildren().length - 1].getTextOffset();
+            String s = getMethodCode();
+            document.insertString(offset, s + "\n");
+
+            Document xmlDocument = psiDocumentManager.getDocument(selectedXml.getXmlFile());
+
+            XmlTag[] subTags = selectedXml.getXmlFile().getRootTag().getSubTags();
+            int xmlOffSet = subTags[subTags.length - 1].getTextRange().getEndOffset();
+            xmlDocument.insertString(xmlOffSet, "\n    " + getSqlCode());
+
+
+        });
+
+        super.doOKAction();
+    }
+
     private void updateSqlPreview() {
+        String code = getSqlCode();
+        sqlPreviewTextField.setText(code);
+    }
+
+    private String getSqlCode() {
         StringBuilder sb = new StringBuilder();
+
+
+
+        sb.append(" \n\n    <!--" + descriptionTextField.getText() + "-->");
+        sb.append("\n    <select id=\"").append(methodNameField.getText());
+
+
+        sb.append("\" ");
+        String resultMap = "";
+        if (resultMapCheckBox.isSelected()) {
+            sb.append("resultMap=\"");
+            resultMap = resultMapComboBox.getSelectedItem().toString();
+        } else {
+            sb.append("resultType=\"");
+            try {
+                PsiType type = ((PsiTypeCodeFragmentImpl) returnTypeCodeFragment).getType();
+                resultMap = type.getCanonicalText();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        sb.append(resultMap);
+        sb.append("\">");
+
+
+        String tableName = "";
+        Pattern pattern = Pattern.compile(".*(from|FROM) (\\w+).*");
+        Matcher matcher = pattern.matcher(selectedXml.getXmlFile().getText());
+        if (matcher.find()) {
+            tableName = matcher.group(2);
+        }
+
+        sb.append("\n       select * from "+tableName);
+
         List<ConditionItem> conditionItems = conditionsTableModel.getItems();
         for (int i = 0; i < conditionItems.size(); i++) {
             ConditionItem item = conditionItems.get(i);
+
+            if (item.checkNull) {
+                sb.append("\n      <if test=\"" + item.getParamName() + " != null\">");
+            }
 
             if (StringUtils.isBlank(item.getParamFieldName())
                 || StringUtils.isBlank(item.getOperator())
                 || StringUtils.isBlank(item.getValue())) {
                 continue;
             }
-            sb.append(getConditionModifier(i))
+            sb.append("\n       "+getConditionModifier(i))
                 .append(" ").append(item.getParamFieldName())
                 .append(" ").append(item.getOperator())
                 .append(" ").append(item.getValue())
             ;
-            sb.append("  \n");
+            if (item.checkNull) {
+                sb.append("\n      </if>");
+            }
         }
+
         List<OrderItem> orderItems = ordersTableModel.getItems();
         for (OrderItem orderItem : orderItems) {
             if (StringUtils.isBlank(orderItem.getParamFieldName())
@@ -837,29 +906,36 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
         sb = new StringBuilder(sb.toString().replaceAll(",$",""));
 
         if (limitOneCheckBox.isSelected() && singleRadioButton.isSelected()) {
-            sb.append("limit 1");
+            sb.append("\n       limit 1");
         }
-
-        sqlPreviewTextField.setText(sb.toString().trim());
+        sb.append("\n    </select>");
+        return sb.toString();
     }
 
     private void updateMethodPreview() {
+        String code = getMethodCode();
+        methodPreviewTextField.setText(code);
+    }
+
+
+
+    private String getMethodCode() {
         StringBuilder sb = new StringBuilder();
         // 方法注释
 
-        sb.append("/**");
-        sb.append("\n  *").append(descriptionTextField.getText().trim());
+        sb.append("\n    /**");
+        sb.append("\n      * ").append(descriptionTextField.getText().trim());
         for (ConditionItem item : conditionsTableModel.getItems()) {
             if (!item.isParam) {
                 continue;
             }
-            sb.append("\n  * @Param ").append(item.getParamName()).append(" ").append(item.getDescription());
+            sb.append("\n      * @param ").append(item.getParamName()).append(" ").append(item.getDescription());
 
         }
-        sb.append("\n  * @Return ").append(returnTypeTextField.getText().trim());
-        sb.append("\n  */\n");
+        sb.append("\n      * @return ").append(returnTypeTextField.getText().trim());
+        sb.append("\n      */");
 
-        sb.append("public");
+        sb.append("\n    public");
 
         if (multipleRadioButton.isSelected()) {
             sb.append(" ").append("List<").append(returnTypeTextField.getText().trim()).append(">");
@@ -870,18 +946,16 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
         sb.append(" ").append(methodNameField.getText().trim()).append("(");
         for (ConditionItem conditionItem : conditionsTableModel.getItems()) {
             if (!conditionItem.getIsParam()) {
-                return;
+                return null;
             }
-            sb.append("\n      @Param(\"").append(conditionItem.getParamName()).append(")");
+            sb.append("\n          @Param(\"").append(conditionItem.getParamName()).append("\")");
             sb.append(" ").append(conditionItem.getParamType()).append(" ").append(conditionItem.getParamName());
             sb.append(",");
         }
         sb = new StringBuilder(sb.toString().replaceAll("(.*),$", "$1"));
 
         sb.append(");");
-
-        methodPreviewTextField.setText(sb.toString());
-
+        return sb.toString();
     }
 
     private String getConditionModifier(int location) {

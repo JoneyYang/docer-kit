@@ -88,16 +88,16 @@ public class MyBatisMethodGenerate extends AnAction {
         if (classes.length <= 0) {
             return;
         }
-        PsiClass psiElement = classes[0];
-        if (psiElement == null) {
+        PsiClass psiClass = classes[0];
+        if (psiClass == null) {
             return;
         }
-        Set<XmlFileImpl> xmlFiles = getReferenceXml(psiElement);
+        Set<XmlFileImpl> xmlFiles = getReferenceXml(psiClass);
         if (xmlFiles.isEmpty()) {
             return;
         }
 
-        MyBatisMethodGenerateDialog dialog = new MyBatisMethodGenerateDialog(project, xmlFiles, psiFile);
+        MyBatisMethodGenerateDialog dialog = new MyBatisMethodGenerateDialog(project, xmlFiles, psiClass);
         dialog.show();
 
 //        for (XmlFileImpl xmlFile : xmlFiles) {
