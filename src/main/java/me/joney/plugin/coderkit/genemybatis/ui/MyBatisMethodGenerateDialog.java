@@ -41,7 +41,6 @@ import com.intellij.util.ui.table.JBListTable;
 import com.intellij.util.ui.table.JBTableRow;
 import com.intellij.util.ui.table.JBTableRowEditor;
 import com.intellij.util.ui.table.JBTableRowRenderer;
-import com.siyeh.ig.threading.SynchronizationOnStaticFieldInspection;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -181,7 +180,12 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
 
         List<XmlTag> resultMapList = getResultMapList(selectedXml.getXmlFile());
         for (XmlTag xmlTag : resultMapList) {
-            resultMapComboBox.addItem(new MapperXmlTag(xmlTag));
+            resultMapComboBox.addItem(new MapperXmlTag(xmlTag){
+                @Override
+                public String toString() {
+                    return this.getXmlTag().getAttributeValue("id");
+                }
+            });
             resultMapComboBox.setEnabled(true);
         }
         if (!resultMapList.isEmpty()) {
@@ -562,7 +566,7 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
 
     private JBListTable createConditionsListTable() {
         return new JBListTable(conditionsTableView, MyBatisMethodGenerateDialog.this.getDisposable()) {
-            JBTableRowRenderer renderer = new EditorTextFieldJBTableRowRenderer(project, StdFileTypes.JAVA,
+            JBTableRowRenderer renderer = new EditorTextFieldJBTableRowRenderer(project, StdFileTypes.PLAIN_TEXT,
                 MyBatisMethodGenerateDialog.this.getDisposable()) {
                 @Override
                 protected String getText(JTable table, int row) {
@@ -935,12 +939,12 @@ public class MyBatisMethodGenerateDialog extends DialogWrapper {
         sb.append("\n      * @return ").append(returnTypeTextField.getText().trim());
         sb.append("\n      */");
 
-        sb.append("\n    public");
+        sb.append("\n    ");
 
         if (multipleRadioButton.isSelected()) {
-            sb.append(" ").append("List<").append(returnTypeTextField.getText().trim()).append(">");
+            sb.append("List<").append(returnTypeTextField.getText().trim()).append(">");
         } else {
-            sb.append(" ").append(returnTypeTextField.getText().trim());
+            sb.append(returnTypeTextField.getText().trim());
         }
 
         sb.append(" ").append(methodNameField.getText().trim()).append("(");
